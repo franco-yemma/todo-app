@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Weekly Focus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:#F5F3EC; --ink:#232520; --muted:#77755E; --line:#DEDACB;
+    --card:#FDFCF8; --accent:#3F5D45; --accent-ink:#F5F3EC;
+    --gold:#B4842E; --danger:#A2493A;
+    box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --paper:#1B1C17; --ink:#EDEAE0; --muted:#9B9880; --line:#33342A; --card:#232420; --accent:#7FA986; --accent-ink:#1B1C17; --gold:#D9A94F; }
+  }
+  :root[data-theme="dark"] { --paper:#1B1C17; --ink:#EDEAE0; --muted:#9B9880; --line:#33342A; --card:#232420; --accent:#7FA986; --accent-ink:#1B1C17; --gold:#D9A94F; }
+  html { scroll-padding-top:env(safe-area-inset-top,0px); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:560px; margin:0 auto; padding:20px 18px 60px; }
+  header { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:6px; }
+  .word { font-family:"Fraunces", Georgia, serif; font-weight:600; font-size:26px; letter-spacing:-.01em; }
+  .hdr-right { display:flex; align-items:center; gap:10px; }
+  .streak { font-size:13px; color:var(--muted); white-space:nowrap; }
+  .streak b { color:var(--gold); font-weight:600; }
+  .gear { background:none; border:1px solid var(--line); color:var(--muted); border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:14px; }
+  .sub { color:var(--muted); font-size:14px; margin:0 0 12px; }
+  .sync-line { font-size:12.5px; color:var(--muted); margin:0 0 18px; display:flex; align-items:center; gap:8px; }
+  .sync-dot { width:7px; height:7px; border-radius:50%; background:var(--line); display:inline-block; }
+  .sync-line.ok .sync-dot { background:var(--accent); }
+  .sync-line.err .sync-dot { background:var(--danger); }
+  .sync-line.busy .sync-dot { background:var(--gold); }
+  .sync-line button { background:none; border:none; color:var(--accent); font-size:12.5px; cursor:pointer; padding:0; text-decoration:underline; }
+  nav { display:flex; gap:6px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:4px; margin-bottom:22px; }
+  nav button { flex:1; padding:9px 6px; border:none; background:none; color:var(--muted); font-size:14px; font-family:inherit; border-radius:7px; cursor:pointer; }
+  nav button.active { background:var(--accent); color:var(--accent-ink); }
+  .panel-title { font-family:"Fraunces", Georgia, serif; font-size:19px; font-weight:600; margin:0 0 2px; }
+  .panel-hint { color:var(--muted); font-size:13.5px; margin:0 0 16px; }
+  .day-card { border-bottom:1px solid var(--line); padding:14px 0; }
+  .day-card:last-of-type { border-bottom:none; }
+  .day-head { font-size:14px; font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+  .day-head .tag { font-size:11px; font-weight:500; color:var(--accent); border:1px solid var(--accent); border-radius:20px; padding:1px 8px; }
+  .task-list { list-style:none; margin:0; padding:0; }
+  .task { display:flex; align-items:flex-start; gap:10px; padding:8px 2px; border-radius:8px; }
+  .box { flex-shrink:0; width:21px; height:21px; margin-top:1px; border:1.5px solid var(--muted); border-radius:6px; background:var(--card); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--card); transition:transform .12s ease; }
+  .task.done .box { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); transform:scale(1.05); }
+  .task-main { flex:1; min-width:0; }
+  .task-text { font-size:15px; word-break:break-word; }
+  .task.done .task-text { color:var(--muted); text-decoration:line-through; }
+  .task-meta { display:flex; gap:6px; margin-top:3px; flex-wrap:wrap; }
+  .badge { font-size:11.5px; color:var(--muted); border:1px solid var(--line); border-radius:20px; padding:1px 8px; }
+  .badge.time { color:var(--accent); border-color:var(--accent); }
+  .star, .del { flex-shrink:0; background:none; border:none; cursor:pointer; font-size:16px; color:var(--line); padding:2px 4px; line-height:1; }
+  .star.active { color:var(--gold); }
+  .del { color:var(--muted); font-size:13px; }
+  .empty { color:var(--muted); font-size:14px; padding:18px 2px; }
+  form.add-row { display:flex; gap:6px; margin-top:10px; }
+  form.add-row input[type=text] { flex:1; min-width:0; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font-size:14.5px; font-family:inherit; }
+  form.add-row input[type=time] { width:108px; padding:9px 6px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font-size:13.5px; font-family:inherit; }
+  form.add-row button { border:none; background:var(--ink); color:var(--paper); border-radius:8px; padding:0 14px; font-size:14px; cursor:pointer; }
+  .done-toggle { color:var(--muted); font-size:13px; background:none; border:none; cursor:pointer; margin-top:16px; padding:0; }
+  input:focus, button:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  .modal-back { position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; align-items:flex-start; justify-content:center; padding:16px; padding-top:calc(16px + env(safe-area-inset-top,0px)); z-index:10; overflow-y:auto; }
+  .modal-back.open { display:flex; }
+  .modal { background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:18px; max-width:420px; width:100%; }
+  .modal h2 { font-family:"Fraunces", Georgia, serif; font-size:18px; margin:0 0 4px; }
+  .modal p.hint { color:var(--muted); font-size:13px; margin:0 0 14px; }
+  .field { margin-bottom:10px; }
+  .field label { display:block; font-size:12.5px; color:var(--muted); margin-bottom:3px; }
+  .field input { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font-size:14px; font-family:inherit; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+  .modal-actions button { border:none; border-radius:8px; padding:9px 14px; font-size:14px; cursor:pointer; }
+  .btn-primary { background:var(--ink); color:var(--paper); }
+  .btn-ghost { background:none; color:var(--muted); }
+  .modal-err { color:var(--danger); font-size:12.5px; margin-top:8px; }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="word">🌱 Weekly Focus</span>
+    <div class="hdr-right">
+      <span class="streak" id="streakBadge"></span>
+      <button class="gear" id="gearBtn" type="button" aria-label="Sync settings">⚙</button>
+    </div>
+  </header>
+  <p class="sub" id="dateLine"></p>
+  <p class="sync-line" id="syncLine"><span class="sync-dot"></span><span id="syncText">Not connected</span> · <button type="button" id="syncNowBtn">sync now</button></p>
+  <nav id="nav">
+    <button data-view="today" class="active">Today</button>
+    <button data-view="tonight">Tonight</button>
+    <button data-view="week">Plan week</button>
+  </nav>
+  <div id="main"></div>
+</div>
+
+<div class="modal-back" id="modalBack">
+  <div class="modal">
+    <h2>Sync with GitHub</h2>
+    <p class="hint">Your data lives as one JSON file in a private repo you control. Paste your details below — they're saved only in this browser.</p>
+    <div class="field"><label>GitHub username</label><input type="text" id="cfgOwner" autocomplete="off"></div>
+    <div class="field"><label>Private data repo name</label><input type="text" id="cfgRepo" autocomplete="off" placeholder="todo-data"></div>
+    <div class="field"><label>Branch</label><input type="text" id="cfgBranch" autocomplete="off" placeholder="main" value="main"></div>
+    <div class="field"><label>File path</label><input type="text" id="cfgPath" autocomplete="off" placeholder="data.json" value="data.json"></div>
+    <div class="field"><label>Personal access token (fine-grained, Contents: read/write on this repo only)</label><input type="password" id="cfgToken" autocomplete="off"></div>
+    <div class="modal-err" id="cfgErr"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="cfgCancel">Cancel</button>
+      <button type="button" class="btn-primary" id="cfgSave">Save & sync</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var state = {
+    tasks: [], stats: { streak:0, lastDate:null }, deletedIds:{}, docUpdatedAt:0,
+    view:'today', showDone:false, config:null, sha:null, syncing:false, syncMsg:'Not connected', syncOk:null
+  };
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function toISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function dateOffset(n){ var d=new Date(); d.setDate(d.getDate()+n); return d; }
+  function isoOffset(n){ return toISO(dateOffset(n)); }
+  function dayLabel(d,i){ if(i===0) return 'Today'; if(i===1) return 'Tomorrow'; return d.toLocaleDateString(undefined,{weekday:'long'}); }
+  function dateLabel(d){ return d.toLocaleDateString(undefined,{month:'short', day:'numeric'}); }
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function sortDay(list){ return list.slice().sort(function(a,b){ if(a.time&&b.time) return a.time<b.time?-1:a.time>b.time?1:0; if(a.time&&!b.time) return -1; if(!a.time&&b.time) return 1; return (a.createdAt||0)-(b.createdAt||0); }); }
+  function tasksFor(d){ return state.tasks.filter(function(t){ return t.date===d; }); }
+  function findTask(id){ return state.tasks.find(function(t){ return t.id===id; }); }
+
+  // ---------- local cache ----------
+  function saveLocal(){
+    try {
+      localStorage.setItem('wf_state', JSON.stringify({ tasks:state.tasks, stats:state.stats, deletedIds:state.deletedIds, docUpdatedAt:state.docUpdatedAt, sha:state.sha }));
+    } catch(e) {}
+  }
+  function loadLocal(){
+    try {
+      var raw = localStorage.getItem('wf_state');
+      if(raw){ var d = JSON.parse(raw); state.tasks=d.tasks||[]; state.stats=d.stats||{streak:0,lastDate:null}; state.deletedIds=d.deletedIds||{}; state.docUpdatedAt=d.docUpdatedAt||0; state.sha=d.sha||null; }
+      var cfgRaw = localStorage.getItem('wf_config');
+      if(cfgRaw) state.config = JSON.parse(cfgRaw);
+    } catch(e) {}
+  }
+
+  // ---------- base64 helpers (unicode-safe) ----------
+  function utf8ToB64(str){ var bytes = new TextEncoder().encode(str); var bin=''; bytes.forEach(function(b){ bin+=String.fromCharCode(b); }); return btoa(bin); }
+  function b64ToUtf8(b64){ var bin = atob(b64.replace(/\n/g,'')); var bytes = Uint8Array.from(bin.split(''), function(c){ return c.charCodeAt(0); }); return new TextDecoder('utf-8').decode(bytes); }
+
+  // ---------- GitHub sync ----------
+  function ghUrl(){ var c=state.config; return 'https://api.github.com/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)+'/contents/'+c.path.split('/').map(encodeURIComponent).join('/'); }
+  function ghHeaders(){ return { 'Authorization':'Bearer '+state.config.token, 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' }; }
+
+  function buildDoc(){ return { tasks: state.tasks, stats: state.stats, deletedIds: state.deletedIds, updatedAt: state.docUpdatedAt }; }
+  function applyDoc(doc){ state.tasks = doc.tasks||[]; state.stats = doc.stats||{streak:0,lastDate:null}; state.deletedIds = doc.deletedIds||{}; state.docUpdatedAt = doc.updatedAt||0; }
+
+  function mergeMaps(a,b){ var r={}; Object.keys(a||{}).forEach(function(k){ r[k]=a[k]; }); Object.keys(b||{}).forEach(function(k){ r[k]=Math.max(r[k]||0,b[k]); }); return r; }
+  function mergeDocs(a,b){
+    var deletedIds = mergeMaps(a.deletedIds,b.deletedIds);
+    var mapA={}, mapB={};
+    (a.tasks||[]).forEach(function(t){ mapA[t.id]=t; });
+    (b.tasks||[]).forEach(function(t){ mapB[t.id]=t; });
+    var ids = Object.keys(Object.assign({}, mapA, mapB));
+    var tasks = [];
+    ids.forEach(function(id){
+      var ta=mapA[id], tb=mapB[id];
+      var newest = !ta ? tb : !tb ? ta : ((ta.updatedAt||0) >= (tb.updatedAt||0) ? ta : tb);
+      var delTs = deletedIds[id];
+      if(delTs && delTs >= (newest.updatedAt||0)) return;
+      tasks.push(newest);
+    });
+    var stats = (a.stats && b.stats) ? (((a.stats.lastDate||'') >= (b.stats.lastDate||'')) ? a.stats : b.stats) : (a.stats||b.stats||{streak:0,lastDate:null});
+    return { tasks:tasks, stats:stats, deletedIds:deletedIds, updatedAt: Math.max(a.updatedAt||0, b.updatedAt||0) };
+  }
+
+  function setSync(msg, ok){ state.syncMsg = msg; state.syncOk = ok; renderSyncLine(); }
+
+  var syncTimer = null, pollTimer = null;
+  function scheduleSync(){ if(syncTimer) clearTimeout(syncTimer); syncTimer = setTimeout(syncPush, 600); }
+
+  async function ghGet(){
+    var res = await fetch(ghUrl() + (state.config.branch ? ('?ref='+encodeURIComponent(state.config.branch)) : ''), { headers: ghHeaders() });
+    return res;
+  }
+  async function ghPut(doc, sha){
+    var body = { message: 'Update tasks', content: utf8ToB64(JSON.stringify(doc)), branch: state.config.branch || 'main' };
+    if(sha) body.sha = sha;
+    var res = await fetch(ghUrl(), { method:'PUT', headers: Object.assign({'Content-Type':'application/json'}, ghHeaders()), body: JSON.stringify(body) });
+    return res;
+  }
+
+  async function syncPull(){
+    if(!state.config || state.syncing) return;
+    state.syncing = true; setSync('Syncing…', null);
+    try {
+      var res = await ghGet();
+      if(res.status === 200){
+        var data = await res.json();
+        var remote = JSON.parse(b64ToUtf8(data.content));
+        var local = buildDoc();
+        var merged = mergeDocs(local, remote);
+        applyDoc(merged);
+        state.sha = data.sha;
+        saveLocal(); renderApp();
+        if(JSON.stringify(merged) !== JSON.stringify(remote)){ await syncPush(); }
+        else { setSync('Synced', true); }
+      } else if(res.status === 404){
+        await syncPush();
+      } else if(res.status === 401 || res.status === 403){
+        setSync('Sync error — check token/permissions', false);
+      } else {
+        setSync('Sync error ('+res.status+')', false);
+      }
+    } catch(e){ setSync('Offline — will retry', false); }
+    state.syncing = false;
+  }
+
+  async function syncPush(){
+    if(!state.config) return;
+    state.syncing = true; setSync('Syncing…', null);
+    try {
+      var doc = buildDoc(); doc.updatedAt = Date.now(); state.docUpdatedAt = doc.updatedAt;
+      var res = await ghPut(doc, state.sha);
+      if(res.status === 200 || res.status === 201){
+        var data = await res.json();
+        state.sha = data.content.sha;
+        saveLocal(); setSync('Synced', true);
+      } else if(res.status === 409){
+        var getRes = await ghGet();
+        if(getRes.status === 200){
+          var gdata = await getRes.json();
+          var remote = JSON.parse(b64ToUtf8(gdata.content));
+          var merged = mergeDocs(doc, remote);
+          applyDoc(merged); saveLocal(); renderApp();
+          var retry = await ghPut(merged, gdata.sha);
+          if(retry.status === 200 || retry.status === 201){ var rdata = await retry.json(); state.sha = rdata.content.sha; setSync('Synced', true); }
+          else { setSync('Will retry on next sync', false); }
+        }
+      } else if(res.status === 401 || res.status === 403){
+        setSync('Sync error — check token/permissions', false);
+      } else {
+        setSync('Sync error ('+res.status+')', false);
+      }
+    } catch(e){ setSync('Offline — will retry', false); }
+    state.syncing = false;
+  }
+
+  function startPolling(){
+    if(pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(function(){ if(document.visibilityState==='visible') syncPull(); }, 25000);
+    document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') syncPull(); });
+    window.addEventListener('focus', syncPull);
+  }
+
+  // ---------- mutations ----------
+  function touch(){ state.docUpdatedAt = Date.now(); saveLocal(); scheduleSync(); }
+  function addTask(dateStr, text, time){
+    text=(text||'').trim(); if(!text) return;
+    var now = Date.now();
+    state.tasks.push({ id:'t'+now+Math.random().toString(36).slice(2,7), text:text, date:dateStr, time:time||null, priority:false, done:false, doneAt:null, createdAt:now, updatedAt:now });
+    touch(); renderApp();
+  }
+  function bumpStreak(){
+    var today=isoOffset(0), yesterday=isoOffset(-1);
+    if(state.stats.lastDate===today) return;
+    var streak = state.stats.lastDate===yesterday ? (state.stats.streak||0)+1 : 1;
+    state.stats = { streak:streak, lastDate:today };
+  }
+  function toggleDone(id){
+    var t=findTask(id); if(!t) return;
+    t.done=!t.done; t.doneAt=t.done?Date.now():null; t.updatedAt=Date.now();
+    if(t.done) bumpStreak();
+    touch(); renderApp();
+  }
+  function togglePriority(id){ var t=findTask(id); if(!t) return; t.priority=!t.priority; t.updatedAt=Date.now(); touch(); renderApp(); }
+  function deleteTask(id){ state.tasks = state.tasks.filter(function(t){ return t.id!==id; }); state.deletedIds[id]=Date.now(); touch(); renderApp(); }
+
+  // ---------- rendering ----------
+  function taskRow(t){
+    var meta = t.time ? '<span class="badge time">'+esc(t.time)+'</span>' : '';
+    var star = '<button class="star'+(t.priority?' active':'')+'" data-star="'+t.id+'" aria-label="Priority" type="button">'+(t.priority?'★':'☆')+'</button>';
+    return '<li class="task'+(t.done?' done':'')+'"><button class="box" data-done="'+t.id+'" aria-label="Mark done" type="button">'+(t.done?'✓':'')+'</button>'
+      + '<div class="task-main"><div class="task-text">'+esc(t.text)+'</div>'+(meta?'<div class="task-meta">'+meta+'</div>':'')+'</div>'
+      + star + '<button class="del" data-del="'+t.id+'" aria-label="Delete" type="button">✕</button></li>';
+  }
+  function addForm(dateStr, placeholder){
+    return '<form class="add-row" data-add="'+dateStr+'"><input type="text" name="text" placeholder="'+esc(placeholder)+'" autocomplete="off"><input type="time" name="time" aria-label="Time (optional)"><button type="submit">Add</button></form>';
+  }
+  function renderToday(){
+    var today=isoOffset(0), all=tasksFor(today);
+    var priority=sortDay(all.filter(function(t){return t.priority&&!t.done;}));
+    var timed=sortDay(all.filter(function(t){return t.time&&!t.priority&&!t.done;}));
+    var anytime=sortDay(all.filter(function(t){return !t.time&&!t.priority&&!t.done;}));
+    var done=all.filter(function(t){return t.done;});
+    var html='<p class="panel-title">Today</p><p class="panel-hint">Check things off as you go — no pressure on order.</p>';
+    if(!all.length){ html+='<p class="empty">Nothing lined up for today yet. Add something below, or set tonight\'s priorities from the Tonight tab.</p>'; }
+    else {
+      if(priority.length) html+='<p class="day-head">Priorities</p><ul class="task-list">'+priority.map(taskRow).join('')+'</ul>';
+      if(timed.length) html+='<p class="day-head">Timed</p><ul class="task-list">'+timed.map(taskRow).join('')+'</ul>';
+      if(anytime.length) html+='<p class="day-head">Anytime</p><ul class="task-list">'+anytime.map(taskRow).join('')+'</ul>';
+      if(!priority.length&&!timed.length&&!anytime.length&&done.length) html+='<p class="empty">Everything on today\'s list is done. Nice.</p>';
+    }
+    html+=addForm(today,'Add something for today…');
+    if(done.length){ html+='<button type="button" class="done-toggle" id="doneToggle">'+(state.showDone?'Hide done ('+done.length+')':'Show done ('+done.length+')')+'</button>'; if(state.showDone) html+='<ul class="task-list">'+sortDay(done).map(taskRow).join('')+'</ul>'; }
+    return html;
+  }
+  function renderTonight(){
+    var tmr=isoOffset(1), d=dateOffset(1), all=sortDay(tasksFor(tmr));
+    var html='<p class="panel-title">Tonight: set up tomorrow</p><p class="panel-hint">Star the few that matter most — everything else stays optional and flexible.</p>';
+    html += all.length ? '<ul class="task-list">'+all.map(taskRow).join('')+'</ul>' : '<p class="empty">Nothing on tomorrow\'s list yet. Add what\'s coming up, or leave it open.</p>';
+    html += addForm(tmr,'Add something for tomorrow ('+dateLabel(d)+')…');
+    return html;
+  }
+  function renderWeek(){
+    var html='<p class="panel-title">Plan the week ahead</p><p class="panel-hint">Drop in what needs to happen. Give fixed things a time; leave the rest flexible.</p>';
+    for(var i=0;i<7;i++){
+      var d=dateOffset(i), iso=toISO(d), list=sortDay(tasksFor(iso));
+      html+='<div class="day-card"><div class="day-head">'+dayLabel(d,i)+' <span class="tag">'+dateLabel(d)+'</span></div>';
+      html+= list.length ? '<ul class="task-list">'+list.map(taskRow).join('')+'</ul>' : '';
+      html+=addForm(iso,'Add a task for '+dayLabel(d,i).toLowerCase()+'…')+'</div>';
+    }
+    return html;
+  }
+  function renderSyncLine(){
+    var el=document.getElementById('syncLine'); var txt=document.getElementById('syncText');
+    txt.textContent = state.config ? state.syncMsg : 'Not connected — tap ⚙ to set up sync';
+    el.className='sync-line'+(state.syncOk===true?' ok':state.syncOk===false?' err':state.syncing?' busy':'');
+  }
+  function renderApp(){
+    document.getElementById('dateLine').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
+    var s = state.stats.streak||0;
+    document.getElementById('streakBadge').innerHTML = s>0 ? '<b>'+s+'</b> day streak' : '';
+    var main = document.getElementById('main');
+    main.innerHTML = state.view==='today' ? renderToday() : state.view==='tonight' ? renderTonight() : renderWeek();
+    document.querySelectorAll('#nav button').forEach(function(b){ b.classList.toggle('active', b.dataset.view===state.view); });
+    renderSyncLine();
+  }
+
+  // ---------- settings modal ----------
+  var modal = document.getElementById('modalBack');
+  function openModal(){
+    var c = state.config || {};
+    document.getElementById('cfgOwner').value = c.owner||'';
+    document.getElementById('cfgRepo').value = c.repo||'';
+    document.getElementById('cfgBranch').value = c.branch||'main';
+    document.getElementById('cfgPath').value = c.path||'data.json';
+    document.getElementById('cfgToken').value = c.token||'';
+    document.getElementById('cfgErr').textContent='';
+    modal.classList.add('open');
+  }
+  function closeModal(){ modal.classList.remove('open'); }
+  document.getElementById('gearBtn').addEventListener('click', openModal);
+  document.getElementById('cfgCancel').addEventListener('click', closeModal);
+  document.getElementById('cfgSave').addEventListener('click', function(){
+    var owner=document.getElementById('cfgOwner').value.trim();
+    var repo=document.getElementById('cfgRepo').value.trim();
+    var branch=document.getElementById('cfgBranch').value.trim()||'main';
+    var path=document.getElementById('cfgPath').value.trim()||'data.json';
+    var token=document.getElementById('cfgToken').value.trim();
+    if(!owner||!repo||!token){ document.getElementById('cfgErr').textContent='Username, repo, and token are required.'; return; }
+    state.config = { owner:owner, repo:repo, branch:branch, path:path, token:token };
+    try { localStorage.setItem('wf_config', JSON.stringify(state.config)); } catch(e){}
+    closeModal(); state.sha=null; syncPull(); startPolling();
+  });
+
+  // ---------- events ----------
+  document.addEventListener('submit', function(e){
+    var form=e.target.closest('[data-add]'); if(!form) return;
+    e.preventDefault(); addTask(form.dataset.add, form.elements.text.value, form.elements.time.value); form.reset();
+  });
+  document.addEventListener('click', function(e){
+    var nb=e.target.closest('[data-view]'); if(nb){ state.view=nb.dataset.view; renderApp(); return; }
+    var db=e.target.closest('[data-done]'); if(db){ toggleDone(db.dataset.done); return; }
+    var sb=e.target.closest('[data-star]'); if(sb){ togglePriority(sb.dataset.star); return; }
+    var del=e.target.closest('[data-del]'); if(del){ deleteTask(del.dataset.del); return; }
+    if(e.target.id==='doneToggle'){ state.showDone=!state.showDone; renderApp(); return; }
+    if(e.target.id==='syncNowBtn'){ syncPull(); return; }
+  });
+
+  loadLocal(); renderApp();
+  if(state.config){ syncPull(); startPolling(); } else { setSync('Not connected', null); }
+})();
+</script>
+</body>
+</html>
